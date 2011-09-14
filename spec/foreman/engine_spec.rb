@@ -60,6 +60,26 @@ describe "Foreman::Engine" do
       engine.start
     end
 
+    it "chooses free ports" do
+      write_procfile
+      engine = Foreman::Engine.new("Procfile", :port => 0)
+
+      ports = [["AF_INET", 5555, "0.0.0.0", "0.0.0.0"], ["AF_INET", 5556, "0.0.0.0", "0.0.0.0"]].reverse
+      stub(TCPServer).new(0) {
+        server = mock!
+        server.addr { ports.pop }
+        server.close {}
+        server
+      }
+      stub(engine).info
+
+      mock(engine).fork_individual(engine.processes["alpha"], 1, 5555)
+      mock(engine).fork_individual(engine.processes["bravo"], 1, 5556)
+      mock(engine).watch_for_termination
+
+      engine.start
+    end
+
   end
 
   describe "execute" do
