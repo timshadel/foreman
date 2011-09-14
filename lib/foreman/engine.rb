@@ -6,6 +6,7 @@ require "tempfile"
 require "timeout"
 require "term/ansicolor"
 require "fileutils"
+require "socket"
 
 class Foreman::Engine
 
@@ -78,9 +79,17 @@ class Foreman::Engine
   end
 
   def port_for(process, num, base_port=nil)
-    base_port ||= 5000
-    offset = processes_in_order.map { |p| p.first }.index(process.name) * 100
-    base_port.to_i + offset + num - 1
+    if base_port == 0
+      Socket.tcp_server_sockets(0) do |sockets|
+        chosen_port = sockets.first.local_address.ip_port
+        sockets.each {|s| s.close}
+        chosen_port
+      end
+    else
+      base_port ||= 5000
+      offset = processes_in_order.map { |p| p.first }.index(process.name) * 100
+      base_port.to_i + offset + num - 1
+    end
   end
 
 private ######################################################################

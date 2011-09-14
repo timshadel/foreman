@@ -7,6 +7,7 @@ class Foreman::Export::Base
 
   def initialize(engine)
     @engine = engine
+    error("PORT cannot be 0 for export.") if engine.options[:port] == 0
   end
 
   def export
