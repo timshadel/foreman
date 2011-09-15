@@ -37,6 +37,7 @@ describe "Foreman::Engine" do
   describe "start" do
     it "forks the processes" do
       write_procfile
+      stub(subject).info
       mock(subject).fork(subject.processes["alpha"])
       mock(subject).fork(subject.processes["bravo"])
       mock(subject).watch_for_termination
@@ -63,14 +64,12 @@ describe "Foreman::Engine" do
       write_procfile
       engine = Foreman::Engine.new("Procfile", :port => 0)
 
-      ports = [5555, 5556, 5557].reverse
+      ports = [5555, 5556].reverse
       stub(Socket).tcp_server_sockets { ports.pop }
       stub(engine).info
 
-      # I have no idea why it's launching 2 alphas...FakeFS?
       mock(engine).fork_individual(engine.processes["alpha"], 1, 5555)
-      mock(engine).fork_individual(engine.processes["alpha"], 2, 5556)
-      mock(engine).fork_individual(engine.processes["bravo"], 1, 5557)
+      mock(engine).fork_individual(engine.processes["bravo"], 1, 5556)
       mock(engine).watch_for_termination
 
       engine.start
@@ -80,6 +79,7 @@ describe "Foreman::Engine" do
   describe "execute" do
     it "runs the processes" do
       write_procfile
+      mock(subject).info("Launching 1 alpha process.")
       mock(subject).fork(subject.processes["alpha"])
       mock(subject).watch_for_termination
       subject.execute("alpha")
