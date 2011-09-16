@@ -87,11 +87,10 @@ class Foreman::Engine
 
   def port_for(process, num, base_port=nil)
     if base_port == 0
-      Socket.tcp_server_sockets(0) do |sockets|
-        chosen_port = sockets.first.local_address.ip_port
-        sockets.each {|s| s.close}
-        chosen_port
-      end
+      server_socket = TCPServer.new(0)
+      chosen_port = server_socket.addr[1]
+      server_socket.close
+      chosen_port
     else
       base_port ||= 5000
       offset = processes_in_order.map { |p| p.first }.index(process.name) * 100

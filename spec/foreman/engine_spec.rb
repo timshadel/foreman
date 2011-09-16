@@ -64,8 +64,13 @@ describe "Foreman::Engine" do
       write_procfile
       engine = Foreman::Engine.new("Procfile", :port => 0)
 
-      ports = [5555, 5556].reverse
-      stub(Socket).tcp_server_sockets { ports.pop }
+      ports = [["AF_INET", 5555, "0.0.0.0", "0.0.0.0"], ["AF_INET", 5556, "0.0.0.0", "0.0.0.0"]].reverse
+      stub(TCPServer).new(0) {
+        server = mock!
+        server.addr { ports.pop }
+        server.close {}
+        server
+      }
       stub(engine).info
 
       mock(engine).fork_individual(engine.processes["alpha"], 1, 5555)
